@@ -64,11 +64,11 @@ export async function GET(
     }
 
     // Return decrypted file
-    // Use ArrayBuffer directly - Buffer.buffer is already an ArrayBuffer
+    // Use ArrayBuffer directly with type assertion for NextResponse
     const arrayBuffer = decryptedBuffer.buffer.slice(
       decryptedBuffer.byteOffset,
       decryptedBuffer.byteOffset + decryptedBuffer.length
-    );
+    ) as ArrayBuffer;
     
     return new NextResponse(arrayBuffer, {
       headers: {
