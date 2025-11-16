@@ -64,7 +64,14 @@ export async function GET(
     }
 
     // Return decrypted file
-    return new NextResponse(decryptedBuffer, {
+    // Convert Buffer to Uint8Array for NextResponse compatibility
+    const uint8Array = new Uint8Array(
+      decryptedBuffer.buffer,
+      decryptedBuffer.byteOffset,
+      decryptedBuffer.length
+    );
+    
+    return new NextResponse(uint8Array, {
       headers: {
         'Content-Type': contentType,
         'Content-Disposition': `attachment; filename="${document.title}"`,
