@@ -25,6 +25,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw new Error("Missing credentials");
         }
 
+        // Type assertion for credentials
+        const { email, password, mfaToken } = credentials as {
+          email: string;
+          password: string;
+          mfaToken?: string;
+        };
+
         const client = await pool.connect();
         try {
           // Get user from database
@@ -32,7 +39,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             `SELECT id, email, password_hash, role, is_active, mfa_enabled, mfa_secret 
              FROM users 
              WHERE email = $1`,
-            [credentials.email]
+            [email]
           );
 
           if (result.rows.length === 0) {
@@ -48,7 +55,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           // Verify password
           const isValidPassword = await bcrypt.compare(
-            credentials.password,
+            password,
             user.password_hash
           );
 
@@ -58,14 +65,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           // Check MFA if enabled
           if (user.mfa_enabled) {
-            if (!credentials.mfaToken) {
+            if (!mfaToken) {
               throw new Error("MFA_REQUIRED");
             }
 
             const isValidMFA = speakeasy.totp.verify({
               secret: user.mfa_secret,
               encoding: "base32",
-              token: credentials.mfaToken,
+              token: mfaToken,
               window: parseInt(process.env.MFA_WINDOW || "1"),
             });
 
