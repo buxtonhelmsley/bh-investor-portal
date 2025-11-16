@@ -28,7 +28,7 @@ export async function GET() {
           // Don't show total shares or capital to regular shareholders
         })),
         totalShareholders: stats.total_shareholders,
-        lastValuation: parseFloat(stats.last_valuation),
+        lastValuation: Number(stats.last_valuation),
       });
     }
 
@@ -41,8 +41,8 @@ export async function GET() {
         totalCapital: parseFloat(row.total_capital || 0),
       })),
       totalShareholders: stats.total_shareholders,
-      lastValuation: parseFloat(stats.last_valuation),
-      totalCapitalRaised: parseFloat(stats.total_capital_raised),
+      lastValuation: Number(stats.last_valuation),
+      totalCapitalRaised: Number(stats.total_capital_raised),
     });
   } catch (error) {
     console.error('Cap table error:', error);

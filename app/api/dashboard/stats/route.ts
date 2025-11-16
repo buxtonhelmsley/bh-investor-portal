@@ -21,7 +21,7 @@ export async function GET() {
       const companyStats = await getCompanyStats();
       stats.shareholderStats = {
         totalShareholders: companyStats.total_shareholders,
-        lastValuation: parseFloat(companyStats.last_valuation),
+        lastValuation: Number(companyStats.last_valuation),
       };
     }
 
