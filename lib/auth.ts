@@ -113,7 +113,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 
   session: {
-    strategy: "database",
+    strategy: "jwt",
     maxAge: parseInt(process.env.AUTH_SESSION_MAX_AGE || "2592000"), // 30 days
     updateAge: 86400, // 24 hours
   },
@@ -128,11 +128,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
 
-    async session({ session, user }) {
-      if (session?.user) {
-        session.user.id = user.id;
-        session.user.role = user.role;
-        session.user.mfaEnabled = user.mfaEnabled;
+    async session({ session, token }) {
+      if (session?.user && token) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
+        session.user.mfaEnabled = token.mfaEnabled as boolean;
       }
       return session;
     },
@@ -154,15 +154,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 
   events: {
-    async signOut({ session }) {
+    async signOut({ token }) {
       // Log sign out
-      if (session?.user?.id) {
+      if (token?.id) {
         const client = await pool.connect();
         try {
           await client.query(
             `INSERT INTO access_logs (user_id, action) 
              VALUES ($1, 'signout')`,
-            [session.user.id]
+            [token.id as string]
           );
         } finally {
           client.release();
