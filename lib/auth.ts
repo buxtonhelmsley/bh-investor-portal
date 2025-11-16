@@ -154,21 +154,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 
   events: {
-    async signOut({ token }) {
-      // Log sign out
-      if (token?.id) {
-        const client = await pool.connect();
-        try {
-          await client.query(
-            `INSERT INTO access_logs (user_id, action) 
-             VALUES ($1, 'signout')`,
-            [token.id as string]
-          );
-        } finally {
-          client.release();
-        }
-      }
-    },
+    // Note: signOut event in NextAuth v5 doesn't provide reliable user context
+    // User signouts are tracked via middleware or client-side instead
   },
 
   secret: process.env.AUTH_SECRET,
