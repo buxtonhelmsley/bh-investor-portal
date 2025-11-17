@@ -1,183 +1,119 @@
-"use client";
+'use client';
 
-import { Suspense, useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { signIn } from 'next-auth/react';
+import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-function SignInForm() {
+export default function SignInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [mfaToken, setMfaToken] = useState("");
-  const [showMfa, setShowMfa] = useState(false);
-  const [error, setError] = useState("");
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setLoading(true);
 
     try {
-      const result = await signIn("credentials", {
-        redirect: false,
+      const result = await signIn('credentials', {
         email,
         password,
-        mfaToken: showMfa ? mfaToken : undefined,
+        redirect: false,
       });
 
+      console.log('SignIn result:', result);
+
       if (result?.error) {
-        if (result.error === "MFA_REQUIRED") {
-          setShowMfa(true);
-          setError("Please enter your two-factor authentication code");
-        } else {
-          setError("Invalid credentials. Please try again.");
-        }
+        setError('Invalid email or password');
+        setLoading(false);
       } else if (result?.ok) {
         router.push(callbackUrl);
         router.refresh();
       }
     } catch (err) {
-      setError("An error occurred. Please try again.");
-    } finally {
+      console.error('SignIn error:', err);
+      setError('An error occurred during sign in');
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold">Buxton Helmsley</h1>
-          <p className="mt-2 text-sm text-gray-600">Investor Portal</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 px-4">
+      <div className="max-w-md w-full">
+        <div className="bg-white rounded-lg shadow-xl p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Buxton Helmsley
+            </h1>
+            <p className="text-gray-600">Investor Portal</p>
+          </div>
+
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Email Address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="alexander@buxtonhelmsley.com"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Enter your password"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center text-sm text-gray-500">
+            <p>Secure access for authorized investors only</p>
+          </div>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>
-              Enter your credentials to access the investor portal
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md text-sm">
-                  {error}
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={showMfa || loading}
-                    className="mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={showMfa || loading}
-                    className="mt-1"
-                  />
-                </div>
-
-                {showMfa && (
-                  <div>
-                    <Label htmlFor="mfaToken">Two-Factor Code</Label>
-                    <Input
-                      id="mfaToken"
-                      name="mfaToken"
-                      type="text"
-                      placeholder="000000"
-                      maxLength={6}
-                      required
-                      value={mfaToken}
-                      onChange={(e) => setMfaToken(e.target.value)}
-                      disabled={loading}
-                      className="mt-1"
-                      autoFocus
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                      Enter the 6-digit code from your authenticator app
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <a
-                  href="/auth/reset-password"
-                  className="text-sm text-gray-600 hover:text-black"
-                >
-                  Forgot password?
-                </a>
-              </div>
-
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Signing in..." : "Sign In"}
-              </Button>
-
-              {showMfa && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => {
-                    setShowMfa(false);
-                    setMfaToken("");
-                    setError("");
-                  }}
-                >
-                  Back to login
-                </Button>
-              )}
-            </form>
-          </CardContent>
-        </Card>
-
-        <p className="text-center text-xs text-gray-500">
-          © {new Date().getFullYear()} Buxton Helmsley, Inc. All rights reserved.
-        </p>
       </div>
     </div>
-  );
-}
-
-export default function SignInPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold">Buxton Helmsley</h1>
-          <p className="mt-2 text-sm text-gray-600">Loading...</p>
-        </div>
-      </div>
-    }>
-      <SignInForm />
-    </Suspense>
   );
 }
