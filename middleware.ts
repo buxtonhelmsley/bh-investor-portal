@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { auth } from '@/lib/auth';
 
+// Force Node.js runtime for middleware (required for database and crypto modules)
+export const runtime = 'nodejs';
+
 // Public routes that don't require authentication
 const publicRoutes = ['/auth/signin', '/auth/error', '/auth/reset-password'];
 
