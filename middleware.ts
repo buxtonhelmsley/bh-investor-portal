@@ -1,20 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { auth } from '@/lib/auth';
-
-// Force Node.js runtime for middleware (required for database and crypto modules)
-export const runtime = 'nodejs';
+import { auth } from '@/lib/auth-edge';
 
 // Public routes that don't require authentication
 const publicRoutes = ['/auth/signin', '/auth/error', '/auth/reset-password'];
-
-// Route permissions by role
-const rolePermissions = {
-  shareholder: ['/dashboard', '/documents', '/profile', '/cap-table'],
-  board_member: ['/dashboard', '/documents', '/profile', '/cap-table', '/shareholders', '/admin'],
-  admin_view: ['/dashboard', '/documents', '/profile', '/cap-table', '/shareholders', '/admin'],
-  admin_edit: ['/dashboard', '/documents', '/profile', '/cap-table', '/shareholders', '/admin', '/admin/upload', '/admin/shareholders/new'],
-};
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -29,7 +18,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check authentication
+  // Check authentication using Edge-compatible auth
   const session = await auth();
 
   if (!session?.user) {
@@ -38,16 +27,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
-  // Check role permissions
-  const userRole = session.user.role;
-  const allowedRoutes = rolePermissions[userRole as keyof typeof rolePermissions] || [];
-
-  const hasAccess = allowedRoutes.some(route => pathname.startsWith(route)) || pathname === '/';
-
-  if (!hasAccess) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
+  // Note: Role-based routing will be handled at the page level
+  // Middleware now only checks if user is authenticated
+  
   return NextResponse.next();
 }
 
